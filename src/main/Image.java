@@ -33,5 +33,7 @@ public class Image {
 	public Integer[] getData(){
 		return this.data;
 	}
-	
+	public int getNumber() {
+		return this.number;
+	}
 }

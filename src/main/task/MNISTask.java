@@ -1,26 +1,34 @@
 package main.task;
 
-import main.Buffer;
+import java.util.ArrayList;
+import java.util.List;
+
+import main.DistanceMonitor;
 import main.Image;
+import main.IntTuple;
+import main.buffer.Buffer;
 
 public class MNISTask extends Task {
-	private Image img1;
-	private Image img2;
-	private Buffer buffer;
+	private Image image;
+	private List<Image> images;
+	private  DistanceMonitor distances;
 
-	public MNISTask(Image img1, Buffer buffer) {
-		this.img1 = img1;
-		this.buffer = buffer;
+	public MNISTask(Image image, List<Image> images, DistanceMonitor distances) {
+		this.image = image;
+		this.images = images;
+		this.distances = distances;
 	}
 
 	@Override
     public void run() {
-		try {
-			Image img2 = buffer.retrieveImage();
-	        System.out.println(img1.getDistanceTo(img2));
-		} catch (Exception e) {
-	        e.printStackTrace();
-	    }
-	
+		for(Image other: images) {
+			try {
+				distances.addTupple(new IntTuple(this.image.getNumber(),  this.image.getDistanceTo(other)));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+		
     }
 }
