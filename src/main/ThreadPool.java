@@ -21,7 +21,6 @@ public class ThreadPool {
 				workerCount++;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 }

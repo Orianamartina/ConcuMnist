@@ -19,10 +19,11 @@ public class ImageLoader {
 
 		Integer[] pixelData = new Integer[datos.length];
 		for (int i = 0; i < datos.length; i++) {
-			pixelData[i] = (int) (datos[i] & 0xFF);
+			pixelData[i] = (int) (datos[i]);
+			System.out.println((int) (datos[i]) & 0xFF);
 		}
-
-		return new Image(-1, pixelData);
+		System.out.println(pixelData.length);
+		return new Image(5, pixelData);
 	}
 
 }

@@ -26,7 +26,7 @@ public class DistanceMonitor {
 	        if (k > tuples.size()) {
 	            k = tuples.size();
 	        }
-
+	        System.out.println(tuples);
 	        Map<Integer, Integer> countMap = new HashMap<>();
 
 	        for (int i = 0; i < k; i++) {
