@@ -5,7 +5,6 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
-import main.Image;
 import javax.imageio.ImageIO;
 
 public class ImageLoader {

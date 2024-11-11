@@ -52,6 +52,7 @@ public class DistanceMonitor {
             }
         }
         System.out.println(tuples.size());
+        System.out.println("Amount of compared rows:should be 10000/60000");
         return mostFrequentNumber;
     }
 
