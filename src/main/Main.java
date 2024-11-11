@@ -145,9 +145,10 @@ public class Main {
         scanner.close();
 
 		TaskBuffer taskBuffer = new TaskBuffer(tamaño_buffer);
-		List<List<Image>> imageSubsets = parseImageSubsets((1000));
+		List<List<Image>> imageSubsets = parseImageSubsets(1000);
 		DistanceMonitor distanceMonitor = new DistanceMonitor();
 		ThreadPool threadPool = new ThreadPool(cant_threads, taskBuffer);
+		WorkerCounter workerCounter = new WorkerCounter(cant_threads);
 		
         System.out.println("\nModo seleccionado: " + mode);
         System.out.println("Ruta del archivo: " + filePath);
@@ -157,15 +158,19 @@ public class Main {
         
         if (mode.equals("test")) {
 			Image image = imageSubsets.get(0).get(0);
-
+			
 			threadPool.runWorkers();
 
 			for (List<Image> subset : imageSubsets) {
 				taskBuffer.addItem(new MNISTask(image, subset, distanceMonitor));
 			}
-			for (int i = 0; i <= cant_threads; i++) {
-				taskBuffer.addItem(new PoisonPill());
+			int i = 0;
+			while(i < cant_threads){
+				taskBuffer.addItem(new PoisonPill(workerCounter));
+				i++;
 			}
+
+			workerCounter.waitForCompletion();
 
 			System.out.println(distanceMonitor.predictNumber(k));
 		} else {
@@ -177,13 +182,18 @@ public class Main {
 			for (List<Image> subset : imageSubsets) {
 				taskBuffer.addItem(new MNISTask(image, subset, distanceMonitor));
 			}
-			for (int i = 0; i <= cant_threads; i++) {
-				taskBuffer.addItem(new PoisonPill());
+
+			int i = 0;
+			while(i < cant_threads){
+				taskBuffer.addItem(new PoisonPill(workerCounter));
+				i++;
 			}
+
+			workerCounter.waitForCompletion();
 
 			System.out.println(distanceMonitor.predictNumber(k));
 		}
-
+        return;
 	}
 
 }

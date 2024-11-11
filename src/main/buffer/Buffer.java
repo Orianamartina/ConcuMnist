@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Buffer<T> {
-	private List<T> items;
+	protected List<T> items;
 	private int bufferSize;
 
 	public Buffer(int bufferSize) {

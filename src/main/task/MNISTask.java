@@ -23,7 +23,7 @@ public class MNISTask extends Task {
     public void run() {
 		for(Image other: images) {
 			try {
-				distances.addTupple(new IntTuple(this.image.getNumber(),  this.image.getDistanceTo(other)));
+				distances.addTuple(new IntTuple(other.getNumber(),  this.image.getDistanceTo(other)));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

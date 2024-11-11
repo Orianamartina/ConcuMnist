@@ -1,6 +1,7 @@
 package main;
 
 import main.buffer.TaskBuffer;
+import main.task.StopWorkerException;
 import main.task.Task;
 
 
@@ -18,9 +19,8 @@ public class Worker extends Thread {
                 Task task = taskBuffer.retrieveItem();
                 task.run();
             }
-        } catch (InterruptedException e) {
+        } catch (StopWorkerException | InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.out.println("Worker was interrupted and is stopping.");
         }
     }
 }

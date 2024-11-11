@@ -8,5 +8,8 @@ public class TaskBuffer extends Buffer<Task> {
 		super(bufferSize);
 		
 	}
-
+	
+	public int tasks() {
+		return this.items.size();
+	}
 }

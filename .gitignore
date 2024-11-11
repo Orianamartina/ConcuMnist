@@ -1,0 +1,11 @@
+/bin/
+/.idea/
+*.iml
+*.xml
+*.classpath
+*.project
+.metadata/
+*.prefs
+src/.~lock.mnist_test.csv#
+src/mnist_test.csv
+src/mnist_train.csv
