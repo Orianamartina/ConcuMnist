@@ -19,7 +19,8 @@ public class Worker extends Thread {
                 Task task = taskBuffer.retrieveItem();
                 task.run();
             }
-        } catch (StopWorkerException | InterruptedException e) {
+        } 
+        catch (StopWorkerException | InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }

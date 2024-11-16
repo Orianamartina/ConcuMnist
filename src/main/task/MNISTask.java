@@ -1,12 +1,10 @@
 package main.task;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import main.DistanceMonitor;
 import main.Image;
 import main.IntTuple;
-import main.buffer.Buffer;
 
 public class MNISTask extends Task {
 	private Image image;

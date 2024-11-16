@@ -15,5 +15,6 @@ public class PoisonPill extends Task {
 
 		throw new StopWorkerException("Worker stopped due to Poison Pill.");
 
+
 	}
 }
