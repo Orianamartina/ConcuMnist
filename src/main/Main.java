@@ -31,7 +31,7 @@ public class Main {
 		List<List<Image>> imageSubsets = new ArrayList<>();
 		List<Image> currentSubset = new ArrayList<>();
 
-		try (BufferedReader br = loadCsv("mnist_test.csv")) {
+		try (BufferedReader br = loadCsv("mnist_train.csv")) {
 			String line;
 			while ((line = br.readLine()) != null) {
 				String[] items = line.split(",");
@@ -61,6 +61,29 @@ public class Main {
 		return imageSubsets;
 	}
 
+	public static List<Image> parseImageList(String path) throws IOException {
+		List<Image> currentList = new ArrayList<>();
+		System.out.println(path);
+		try (BufferedReader br = loadCsv("mnist_test.csv")) {
+			String line;
+			while ((line = br.readLine()) != null) {
+				String[] items = line.split(",");
+
+				if (items.length > 0) {
+					int firstItem = Integer.parseInt(items[0].trim());
+
+					Integer[] restItems = new Integer[items.length - 1];
+					for (int i = 1; i < items.length; i++) {
+						restItems[i - 1] = Integer.parseInt(items[i].trim());
+					}
+					currentList.add(new Image(firstItem, restItems));
+				}
+			}
+		}
+		return currentList;
+	}
+
+
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		Scanner scanner = new Scanner(System.in);
@@ -89,11 +112,11 @@ public class Main {
 		} else {
 			System.out.print("Ingrese la ruta del archivo CSV: ");
 			filePath = "";
-//			filePath = scanner.nextLine().trim();
-//			if (!filePath.endsWith(".csv") || !new File(filePath).exists()) {
-//				System.out.println("Archivo CSV no encontrado o inválido.");
-//				
-//			}
+			filePath = scanner.nextLine().trim();
+			if (!filePath.endsWith(".csv") || !new File(filePath).exists()) {
+				System.out.println("Archivo CSV no encontrado o inválido.");
+
+			}
 		}
 		// step 3: obtener k        
 		int k = 0;
@@ -157,15 +180,15 @@ public class Main {
         System.out.println("Tamaño del buffer: " + tamaño_buffer);
         
         if (mode.equals("test")) {
-			Image image = imageSubsets.get(0).get(0);
-			
+			List<Image> images = parseImageList(filePath);
+			//hay que hacer la comparacion de linea por linea en vez de agarrar el primer elemento
 			threadPool.runWorkers();
 
-			for (List<Image> subset : imageSubsets) {
-				taskBuffer.addItem(new MNISTask(image, subset, distanceMonitor));
+			for (Image subset : images) {
+				taskBuffer.addItem(new MNISTask(subset, images, distanceMonitor));
 			}
 			int i = 0;
-			while(i < cant_threads){
+			while(i <= cant_threads){
 				taskBuffer.addItem(new PoisonPill(workerCounter));
 				i++;
 			}
@@ -184,7 +207,7 @@ public class Main {
 			}
 
 			int i = 0;
-			while(i < cant_threads){
+			while(i <= cant_threads){
 				taskBuffer.addItem(new PoisonPill(workerCounter));
 				i++;
 			}

@@ -9,3 +9,4 @@
 src/.~lock.mnist_test.csv#
 src/mnist_test.csv
 src/mnist_train.csv
+out
