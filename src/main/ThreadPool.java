@@ -5,13 +5,13 @@ import main.buffer.TaskBuffer;
 public class ThreadPool {
 	private int workerQ;
 	private TaskBuffer taskBuffer;
-	
+
 	public ThreadPool(int workerQ, TaskBuffer taskBuffer) {
 		this.workerQ = workerQ;
 		this.taskBuffer = taskBuffer;
 	}
-	
-	
+
+
 	public void runWorkers() {
 		int workerCount = 0;
 		try {

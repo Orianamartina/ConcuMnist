@@ -184,10 +184,9 @@ public class Main {
 		if (mode.equals("test")) {
 			List<Image> images = parseImageList(filePath);
 			List<List<Image>> imageSubsets = parseImageSubsets(1000);
-
-			// hay que hacer la comparacion de linea por linea en vez de agarrar el primer
-			// elemento
+			Long starTime = System.currentTimeMillis();
 			int correctPredictions = 0;
+
 			for (Image image : images) {
 				TaskBuffer taskBuffer = new TaskBuffer(tamaño_buffer);
 				DistanceMonitor distanceMonitor = new DistanceMonitor();
@@ -207,15 +206,19 @@ public class Main {
 				}
 
 				workerCounter.waitForCompletion();
-				int prediction = distanceMonitor.predictNumber(k); 
+				int prediction = distanceMonitor.predictNumber(k);
 				if (prediction== image.getNumber()) {
 					correctPredictions++;
 
 				}
 			}
-			System.out.println(correctPredictions);
-			System.out.println(correctPredictions / images.size());
+			Long endTime = System.currentTimeMillis();
+			System.out.println("Tiempo de finalizacion: " + (endTime - starTime/1000));
+			System.out.println("predictions " + correctPredictions);
+			System.out.println("images " + images.size());
+			System.out.println((double)correctPredictions / images.size());
 //			/home/oriana/Desktop/concuMinst/src/mnist_test.csv
+			//C:\Users\lulac\Desktop\mnist_test.csv
 		} else {
 
 			TaskBuffer taskBuffer = new TaskBuffer(tamaño_buffer);
@@ -224,6 +227,8 @@ public class Main {
 			ThreadPool threadPool = new ThreadPool(cant_threads, taskBuffer);
 			WorkerCounter workerCounter = new WorkerCounter(cant_threads);
 			Image image = ImageLoader.loadImage(filePath);
+
+			Long starTime = System.currentTimeMillis();
 
 			threadPool.runWorkers();
 
@@ -238,7 +243,8 @@ public class Main {
 			}
 
 			workerCounter.waitForCompletion();
-
+			Long endTime = System.currentTimeMillis();
+			System.out.println("Tiempo de finalizacion: " + (endTime - starTime/1000));
 			System.out.println(distanceMonitor.predictNumber(k));
 		}
 		return;
