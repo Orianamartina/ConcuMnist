@@ -260,11 +260,11 @@ public class Main {
 		long elapsedTimeMillis = endTime - startTime;
 
 		long elapsedTimeSeconds = elapsedTimeMillis / 1000;
-
 		long minutes = elapsedTimeSeconds / 60;
 		long seconds = elapsedTimeSeconds % 60;
+		long milliseconds = elapsedTimeMillis % 1000;
 
-		System.out.println("Tiempo de finalización: " + minutes + " minutos y " + seconds + " segundos");
+		System.out.println("Tiempo de finalización: " + minutes + " minutos, " + seconds + " segundos, y " + milliseconds + " milisegundos");
 
 	}
 
