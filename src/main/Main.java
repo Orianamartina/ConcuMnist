@@ -37,7 +37,7 @@ public class Main {
 		List<List<Image>> imageSubsets = new ArrayList<>();
 		List<Image> currentSubset = new ArrayList<>();
 
-		try (BufferedReader br = loadCsv("mnist_train.csv")) {
+		try (BufferedReader br = loadCsv("mnist_test.csv")) {
 			String line;
 			while ((line = br.readLine()) != null) {
 				String[] items = line.split(",");
@@ -67,16 +67,18 @@ public class Main {
 		return imageSubsets;
 	}
 
-	public static List<Image> parseImageList(String path) throws IOException {
+	public static List<Image> parseImageList(String path, Integer maxLines) throws IOException {
 		List<Image> currentList = new ArrayList<>();
 		try (BufferedReader br = loadTestCsv(path)) {
 			String line;
+			int lineCount = 0;
 
 			while ((line = br.readLine()) != null) {
+				if (maxLines != null && lineCount >= maxLines) {
+					break;
+				}
 
-				line = br.readLine();
 				String[] items = line.split(",");
-
 				if (items.length > 0) {
 					int firstItem = Integer.parseInt(items[0].trim());
 
@@ -87,6 +89,7 @@ public class Main {
 					currentList.add(new Image(firstItem, restItems));
 				}
 
+				lineCount++;
 			}
 		}
 		return currentList;
@@ -131,6 +134,24 @@ public class Main {
 					break;
 				}
 			}
+		}
+	    Integer lines = null;
+		while (true) {
+			if (mode.equals("test")) {
+				System.out.print("Ingrese la cantidad de lineas a leer, o nada para leer todas");
+				String input = scanner.nextLine().trim();
+
+				if (!input.isEmpty()) {
+					try {
+						lines = Integer.parseInt(input);
+					} catch (NumberFormatException e) {
+						System.out.println(
+								"Entrada no válida. Por favor, ingrese un número o deje en blanco para leer todas las líneas.");
+						continue; 
+					}
+				}
+			}
+			break;
 		}
 		// step 3: obtener k
 		int k = 0;
@@ -194,11 +215,11 @@ public class Main {
 		WorkerCounter workerCounter = new WorkerCounter(cant_threads);
 
 		Long startTime;
-		
+
 		System.out.println("Comenzando analisis...");
 		System.out.println(" ");
 		if (mode.equals("test")) {
-			List<Image> images = parseImageList(filePath);
+			List<Image> images = parseImageList(filePath, lines);
 			startTime = System.currentTimeMillis();
 
 			threadPool.runWorkers();
@@ -244,7 +265,6 @@ public class Main {
 		long seconds = elapsedTimeSeconds % 60;
 
 		System.out.println("Tiempo de finalización: " + minutes + " minutos y " + seconds + " segundos");
-
 
 	}
 
