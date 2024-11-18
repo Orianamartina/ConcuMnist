@@ -1,44 +1,52 @@
 package main;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
 public class DistanceMonitor {
-    private PriorityQueue<IntTuple> tuples;
+    private Map<Image, PriorityQueue<IntTuple>> imageTuplesMap;
     private boolean writer;
+    private int k;
 
-    public DistanceMonitor() {
-        this.tuples = new PriorityQueue<>((t1, t2) -> Integer.compare(t1.second(), t2.second()));
+    public DistanceMonitor(int k) {
+        this.imageTuplesMap = new HashMap<>();
         this.writer = false;
+        this.k = k;
     }
 
-    public synchronized void addTuple(IntTuple tuple) throws InterruptedException {
+    public synchronized void addTuple(Image image, IntTuple tuple) throws InterruptedException {
         while (this.writer) {
             wait();
         }
-        
+
         this.writer = true;
-        tuples.add(tuple);
+        
+        PriorityQueue<IntTuple> queue = imageTuplesMap.computeIfAbsent(image, k -> 
+            new PriorityQueue<>((t1, t2) -> Integer.compare(t2.second(), t1.second()))
+        );
+        
+        queue.add(tuple);
+
+        if (queue.size() > k) {
+            queue.poll();
+        }
+
         this.writer = false;
         notifyAll();
     }
 
-
-    public synchronized int predictNumber(int k) {
-        k = Math.min(k, tuples.size());
-        List<IntTuple> topKElements = new ArrayList<>();
-        PriorityQueue<IntTuple> tempQueue = new PriorityQueue<>(tuples);
-
-        for (int i = 0; i < k; i++) {
-        	IntTuple iem = tempQueue.poll();
-            topKElements.add(iem);
+    public synchronized int predictNumberForOneImage() throws IllegalStateException {
+        if (imageTuplesMap.size() != 1) {
+            throw new IllegalStateException("Error: predictNumberForOneImage requires exactly one image in the map.");
         }
-      
+
+        Image image = imageTuplesMap.keySet().iterator().next();
+        PriorityQueue<IntTuple> tuples = new PriorityQueue<>(imageTuplesMap.get(image));
+
         Map<Integer, Integer> countMap = new HashMap<>();
-        for (IntTuple tuple : topKElements) {
+        while (!tuples.isEmpty()) {
+            IntTuple tuple = tuples.poll();
             int number = tuple.first();
             countMap.put(number, countMap.getOrDefault(number, 0) + 1);
         }
@@ -51,9 +59,40 @@ public class DistanceMonitor {
                 maxCount = entry.getValue();
             }
         }
-//        System.out.println(tuples.size());
-//        System.out.println("Amount of compared rows:should be 10000/60000");
+        
         return mostFrequentNumber;
     }
 
+    public synchronized double calculateSuccessRatio() {
+        int totalImages = imageTuplesMap.size();
+        int correctPredictions = 0;
+
+        for (Map.Entry<Image, PriorityQueue<IntTuple>> entry : imageTuplesMap.entrySet()) {
+
+            Image image = entry.getKey();
+            PriorityQueue<IntTuple> tuples = new PriorityQueue<>(entry.getValue());
+
+            Map<Integer, Integer> countMap = new HashMap<>();
+            while (!tuples.isEmpty()) {
+                IntTuple tuple = tuples.poll();
+                int number = tuple.first();
+                countMap.put(number, countMap.getOrDefault(number, 0) + 1);
+            }
+
+            int mostFrequentNumber = -1;
+            int maxCount = 0;
+            for (Map.Entry<Integer, Integer> countEntry : countMap.entrySet()) {
+                if (countEntry.getValue() > maxCount) {
+                    mostFrequentNumber = countEntry.getKey();
+                    maxCount = countEntry.getValue();
+                }
+            }
+
+            if (mostFrequentNumber == image.getNumber()) {
+                correctPredictions++;
+            }
+        }
+
+        return totalImages == 0 ? 0.0 : ((double) correctPredictions / totalImages) * 100;
+    }
 }

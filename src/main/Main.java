@@ -37,7 +37,7 @@ public class Main {
 		List<List<Image>> imageSubsets = new ArrayList<>();
 		List<Image> currentSubset = new ArrayList<>();
 
-		try (BufferedReader br = loadCsv("mnist_test.csv")) {
+		try (BufferedReader br = loadCsv("mnist_train.csv")) {
 			String line;
 			while ((line = br.readLine()) != null) {
 				String[] items = line.split(",");
@@ -71,7 +71,7 @@ public class Main {
 		List<Image> currentList = new ArrayList<>();
 		try (BufferedReader br = loadTestCsv(path)) {
 			String line;
-	
+
 			while ((line = br.readLine()) != null) {
 
 				line = br.readLine();
@@ -110,20 +110,26 @@ public class Main {
 		}
 		// Step 2: Cargar el archivo
 		String filePath = "";
-		if (mode.equals("imagen")) {
-			System.out.print("Ingrese la ruta de la imagen (.png): ");
-			filePath = scanner.nextLine().trim();
-			if (!filePath.endsWith(".png") || !new File(filePath).exists()) {
-				System.out.println("Archivo de imagen no encontrado o inválido.");
+		while (true) {
+			if (mode.equals("imagen")) {
+				System.out.print("Ingrese la ruta de la imagen (.png): ");
+				filePath = scanner.nextLine().trim();
+				if (!filePath.endsWith(".png") || !new File(filePath).exists()) {
+					System.out.println("Archivo de imagen no encontrado o inválido.");
 
-			}
-		} else {
-			System.out.print("Ingrese la ruta del archivo CSV: ");
-			filePath = "";
-			filePath = scanner.nextLine().trim();
-			if (!filePath.endsWith(".csv") || !new File(filePath).exists()) {
-				System.out.println("Archivo CSV no encontrado o inválido.");
+				} else {
+					break;
+				}
+			} else {
+				System.out.print("Ingrese la ruta del archivo CSV: ");
+				filePath = "";
+				filePath = scanner.nextLine().trim();
+				if (!filePath.endsWith(".csv") || !new File(filePath).exists()) {
+					System.out.println("Archivo CSV no encontrado o inválido.");
 
+				} else {
+					break;
+				}
 			}
 		}
 		// step 3: obtener k
@@ -181,59 +187,43 @@ public class Main {
 		System.out.println("Cantidad de threads: " + cant_threads);
 		System.out.println("Tamaño del buffer: " + tamaño_buffer);
 
+		TaskBuffer taskBuffer = new TaskBuffer(tamaño_buffer);
+		List<List<Image>> imageSubsets = parseImageSubsets(1000);
+		DistanceMonitor distanceMonitor = new DistanceMonitor(k);
+		ThreadPool threadPool = new ThreadPool(cant_threads, taskBuffer);
+		WorkerCounter workerCounter = new WorkerCounter(cant_threads);
+
+		Long startTime;
+		
+		System.out.println("Comenzando analisis...");
+		System.out.println(" ");
 		if (mode.equals("test")) {
 			List<Image> images = parseImageList(filePath);
-			List<List<Image>> imageSubsets = parseImageSubsets(1000);
-			Long starTime = System.currentTimeMillis();
-			int correctPredictions = 0;
+			startTime = System.currentTimeMillis();
+
+			threadPool.runWorkers();
 
 			for (Image image : images) {
-				TaskBuffer taskBuffer = new TaskBuffer(tamaño_buffer);
-				DistanceMonitor distanceMonitor = new DistanceMonitor();
-				ThreadPool threadPool = new ThreadPool(cant_threads, taskBuffer);
-				WorkerCounter workerCounter = new WorkerCounter(cant_threads);
-
-				threadPool.runWorkers();
-
 				for (List<Image> subset : imageSubsets) {
-					taskBuffer.addItem(new MNISTask(image, subset, distanceMonitor));
-				}
-
-				int i = 0;
-				while (i <= cant_threads) {
-					taskBuffer.addItem(new PoisonPill(workerCounter));
-					i++;
-				}
-
-				workerCounter.waitForCompletion();
-				int prediction = distanceMonitor.predictNumber(k);
-				if (prediction== image.getNumber()) {
-					correctPredictions++;
-
+					taskBuffer.addItem(new MNISTask(image, subset, distanceMonitor, k));
 				}
 			}
-			Long endTime = System.currentTimeMillis();
-			System.out.println("Tiempo de finalizacion: " + (endTime - starTime/1000));
-			System.out.println("predictions " + correctPredictions);
-			System.out.println("images " + images.size());
-			System.out.println((double)correctPredictions / images.size());
-//			/home/oriana/Desktop/concuMinst/src/mnist_test.csv
-			//C:\Users\lulac\Desktop\mnist_test.csv
+
+			for (int i = 0; i <= cant_threads; i++) {
+				taskBuffer.addItem(new PoisonPill(workerCounter));
+			}
+
+			workerCounter.waitForCompletion();
+			System.out.println("Ratio de éxito: " + distanceMonitor.calculateSuccessRatio() + "%");
 		} else {
 
-			TaskBuffer taskBuffer = new TaskBuffer(tamaño_buffer);
-			List<List<Image>> imageSubsets = parseImageSubsets(1000);
-			DistanceMonitor distanceMonitor = new DistanceMonitor();
-			ThreadPool threadPool = new ThreadPool(cant_threads, taskBuffer);
-			WorkerCounter workerCounter = new WorkerCounter(cant_threads);
 			Image image = ImageLoader.loadImage(filePath);
-
-			Long starTime = System.currentTimeMillis();
+			startTime = System.currentTimeMillis();
 
 			threadPool.runWorkers();
 
 			for (List<Image> subset : imageSubsets) {
-				taskBuffer.addItem(new MNISTask(image, subset, distanceMonitor));
+				taskBuffer.addItem(new MNISTask(image, subset, distanceMonitor, k));
 			}
 
 			int i = 0;
@@ -243,11 +233,19 @@ public class Main {
 			}
 
 			workerCounter.waitForCompletion();
-			Long endTime = System.currentTimeMillis();
-			System.out.println("Tiempo de finalizacion: " + (endTime - starTime/1000));
-			System.out.println(distanceMonitor.predictNumber(k));
+			System.out.println("Resultado: " + distanceMonitor.predictNumberForOneImage());
 		}
-		return;
+		Long endTime = System.currentTimeMillis();
+		long elapsedTimeMillis = endTime - startTime;
+
+		long elapsedTimeSeconds = elapsedTimeMillis / 1000;
+
+		long minutes = elapsedTimeSeconds / 60;
+		long seconds = elapsedTimeSeconds % 60;
+
+		System.out.println("Tiempo de finalización: " + minutes + " minutos y " + seconds + " segundos");
+
+
 	}
 
 }
